@@ -46,4 +46,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/ninanor/hunngaupejakt:${{ steps.set-tag.outputs.TAG }}
+          tags: ghcr.io/ninanor/brownbearpopmodel:${{ steps.set-tag.outputs.TAG }}
