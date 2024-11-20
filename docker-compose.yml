@@ -1,0 +1,11 @@
+services:
+  brownbearpopmodel:
+    image: ${REGISTRY:-}brownbearpopmodel:${IMAGE_TAG:-test}
+    ports:
+      - 3840:3838
+    #restart: unless-stopped
+    # deploy:
+    #   restart_policy:
+    #     condition: on-failure
+    #     max_attempts: 3
+    #     delay: 60s
