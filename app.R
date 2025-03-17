@@ -148,7 +148,6 @@ ui <- navbarPage("Beskattningsmodell för honbjörnar V04.2023", id = "tabs",
 )
 
 # Define server logic required to draw a histogram
-# Define server logic required to draw a histogram
 server <- function(input, output, session) {
   data_internal <- reactiveValues(
     raw=NULL,
@@ -298,9 +297,7 @@ server <- function(input, output, session) {
                     autoWidth = TRUE,
                     ordering = TRUE,
                     dom = 'tB',
-                    buttons = c('pdf'
-                                # 'copy', 'csv', 'excel'
-                    )
+                    buttons = c('pdf','copy', 'csv', 'excel')
                   ),
 
                   class = "display"
@@ -309,7 +306,8 @@ server <- function(input, output, session) {
 
     }else{
       removals$raw<-matrix(0, ncol=input$this_yr-input$census_yr1, nrow=20)
-      data=run_bear(lowest=input$lowRange, highest=input$HighRange,years_since=as.numeric(input$this_yr-input$census_yr1),years_to_forecast=as.numeric(input$forecast),
+
+        data=run_bear(lowest=input$lowRange, highest=input$HighRange,years_since=as.numeric(input$this_yr-input$census_yr1),years_to_forecast=as.numeric(input$forecast),
                     female_harvest=input$female_harvest, removals=removals$raw, nsim=as.numeric(input$iters))
       N_bear_tibble=as_tibble(data)
 
@@ -377,8 +375,7 @@ server <- function(input, output, session) {
                     ordering = TRUE,
                     dom = 'tB',
 
-                    buttons = c(#'copy', 'csv', 'excel',
-                      'pdf')
+                    buttons = c('copy', 'csv', 'excel','pdf')
                   ),
 
                   class = "display"
@@ -386,8 +383,7 @@ server <- function(input, output, session) {
 
       })
     }
-
-
+N_bear_out<<-N_bear_tibble3()
 
 
 
