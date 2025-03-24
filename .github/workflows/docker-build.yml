@@ -1,21 +1,23 @@
 name: Docker Build and Push to GHCR
 
 on:
-  # Trigger on pull requests and pushes to specific branches
   pull_request:
     branches: [ production, test ]
-  push:
-    branches: [ production, test ]
-  # Add workflow dispatch for manual triggers
   workflow_dispatch:
     inputs:
       branch:
         description: 'Branch to build'
         required: true
         default: 'test'
+        type: choice
+        options:
+          - test
+          - production
 
 jobs:
   docker-build-push:
+    # Run on PRs to production/test OR manual trigger
+    if: contains(fromJson('["production", "test"]'), github.base_ref) || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
@@ -32,10 +34,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Set Docker tag based on branch
+      - name: Set Docker tag based on target branch
         id: set-tag
         run: |
-          if [[ ${{ github.event.inputs.branch || github.ref_name }} == 'production' ]]; then
+          TARGET_BRANCH="${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.base_ref }}"
+          if [[ "$TARGET_BRANCH" == "production" ]]; then
             echo "TAG=latest" >> $GITHUB_OUTPUT
           else
             echo "TAG=test" >> $GITHUB_OUTPUT
