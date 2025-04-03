@@ -298,7 +298,7 @@ server <- function(input, output, session) {
                     autoWidth = TRUE,
                     ordering = TRUE,
                     dom = 'tB',
-                    buttons = c('pdf''copy', 'csv', 'excel'
+                    buttons = c('pdf','copy', 'csv', 'excel'
                     )
                   ),
 
