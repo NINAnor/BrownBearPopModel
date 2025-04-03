@@ -14,12 +14,12 @@ run_bear <- function(lowest, highest,
                      removals,
                      nsim = 5000) {
   #### Load data
-  mort_fem <- readRDS(here::here("data/mort_feml.rds"))
-  mort_coy <- readRDS(here::here("data/mort_COY.rds"))
-  litter_size <- readRDS(here::here("data/LitterSize.rds"))
-  prob_coy <- readRDS(here::here("data/prob_COY.rds"))
-  stabil_fordelig <- readRDS(here::here("data/Stabil_fordelig.rds"))
-  harvest_age <- readRDS(here::here("data/harvest_age.rds"))
+  mort_fem <- readRDS("data/mort_feml.rds")
+  mort_coy <- readRDS("data/mort_COY.rds")
+  litter_size <- readRDS("data/LitterSize.rds")
+  prob_coy <- readRDS("data/prob_COY.rds")
+  stabil_fordelig <- readRDS("data/Stabil_fordelig.rds")
+  harvest_age <- readRDS("data/harvest_age.rds")
 
   ## Add the previous monitoring data to the future projection
   ## Loop through all the iterations
