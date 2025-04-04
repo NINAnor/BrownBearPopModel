@@ -28,9 +28,7 @@ run_bear=function(lowest, highest,years_since,years_to_forecast,female_harvest,r
   ## Return the whole n_bear/N_Bear matrices for plotting
   
   nyear=sum(years_since+years_to_forecast)
-  
-  
-  
+    
   ### Create matrix
   A <- matrix(0, ncol=20, nrow=20)
   lam <- matrix(ncol=nsim, nrow=nyear)
