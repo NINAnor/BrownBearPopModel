@@ -23,7 +23,7 @@ suppressPackageStartupMessages({
 
 options(shiny.sanitize.errors = TRUE)
 
-source('R/run_bear.R')
+source('run_bear.R')
 harvest_age<-readRDS("data/harvest_age.rds")
 
 # error supression CSS
@@ -33,7 +33,7 @@ tags$style(type="text/css",
 )
 
 # Define UI for application
-ui <- navbarPage("Beskattningsmodell fÃ¶r honbjÃ¶rnar V04.2023", id = "tabs",
+ui <- navbarPage("Beskattningsmodell för honbjörnar V02.2025", id = "tabs",
                  tabPanel("Hem",
                           htmltools::includeMarkdown("www/front_matter.md")
                  ),
@@ -43,7 +43,7 @@ ui <- navbarPage("Beskattningsmodell fÃ¶r honbjÃ¶rnar V04.2023", id = "tabs",
                                    wellPanel(
                                      tabsetPanel(
                                        tabPanel(title = 'Instruktionsvideo',
-                                                h2("Video frÃ¥n onlinewebinar"),
+                                                h2("Video från onlinewebinar"),
                                                 br(),
                                                 tags$iframe(src="https://player.vimeo.com/video/720966569?h=fb308a3e7b", style="display:block; width:80%; height:80vh;", frameborder="0", allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture")
                                        ),
@@ -58,7 +58,7 @@ ui <- navbarPage("Beskattningsmodell fÃ¶r honbjÃ¶rnar V04.2023", id = "tabs",
                                                 tags$iframe(src="https://mfr.osf.io/render?url=https://osf.io/vzdtc/?direct%26mode=render%26action=download%26mode=render", style="display:block; width:80%; height:80vh;", frameborder="0", allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture")
                                        )
                                      ))))),
-
+                 
                  #
                  tabPanel("Modelldata",
                           fluidRow(column(8, align="left",
@@ -67,10 +67,10 @@ ui <- navbarPage("Beskattningsmodell fÃ¶r honbjÃ¶rnar V04.2023", id = "tabs",
                                           numericInput("lowRange", "Undre:", 100, min = 0, max = 1000),
                                           uiOutput("high"),
                                           br(), br(),
-                                          '2: Lasta upp avskjutningsdata hÃ¤r: ',
+                                          '2: Lasta upp avskjutningsdata här: ',
                                           radioButtons(
                                             "zeroRem",
-                                            label = h4("Ã„r det fler Ã¤n 0 skjutna honor i omrÃ¥det?"),
+                                            label = h4("Är det fler än 0 skjutna honor i området?"),
                                             choices = list(
                                               "Ja" = "Yes",
                                               "Nej" = "No"
@@ -83,9 +83,9 @@ ui <- navbarPage("Beskattningsmodell fÃ¶r honbjÃ¶rnar V04.2023", id = "tabs",
                                                     trigger = "hover"
                                           ),
                                           conditionalPanel("input.zeroRem == 'Yes'",
-
+                                                           
                                                            # Input: Select a file ----
-                                                           fileInput("harvestdata", "VÃ¤lj indatafil (.CSV)",
+                                                           fileInput("harvestdata", "Välj indatafil (.CSV)",
                                                                      multiple = FALSE,
                                                                      accept = c("text/csv",
                                                                                 "text/comma-separated-values,text/plain",
@@ -97,26 +97,26 @@ ui <- navbarPage("Beskattningsmodell fÃ¶r honbjÃ¶rnar V04.2023", id = "tabs",
                                                                       tableOutput("view"))
                                                            )),
                                                            br(), br(),
-                                                           '3:Senaste Ã¥r fÃ¶r inventering: ',
+                                                           '3:Senaste år för inventering: ',
                                                            uiOutput("census")),
                                           conditionalPanel("input.zeroRem == 'No'",
-                                                           numericInput("census_yr1", "inventeringsÃ¥r", 2020, min=2010, max= lubridate::year(Sys.Date()))
+                                                           numericInput("census_yr1", "inventeringsår", 2020, min=2010, max= lubridate::year(Sys.Date()))
                                           ),
-
+                                          
                                           br(), br(),
-                                          '4: Detta Ã¥r?:',
-                                          numericInput("this_yr", "detta Ã¥r", lubridate::year(Sys.Date()), min=2000),#, max= lubridate::year(Sys.Date())),
+                                          '4: Detta år?:',
+                                          numericInput("this_yr", "detta år", lubridate::year(Sys.Date()), min=2000),#, max= lubridate::year(Sys.Date())),
                                           br(), br(),
-                                          '5: Antal Ã¥r fÃ¶r prognosen:',
-                                          numericInput("forecast", "Ã¥r", 5, min = 1, max = 5),
+                                          '5: Antal år för prognosen:',
+                                          numericInput("forecast", "år", 5, min = 1, max = 5),
                                           br(), br(),
-                                          '6: Avskjutning av honor per Ã¥r i ditt omrÃ¥de:',
-                                          numericInput("female_harvest", "HonbjÃ¶rnar", 25, min = 0, max = 1000)
-
+                                          '6: Avskjutning av honor per år i ditt område:',
+                                          uiOutput("female_harvest_inputs")
+                                          
                           ))
                  ),
-                 tabPanel("KÃ¶r modellen",
-                          actionButton("run_model", "KÃ¶r modellen"),
+                 tabPanel("Kör modellen",
+                          actionButton("run_model", "Kör modellen"),
                           br(),br(),
                           selectInput("iters", "Mode",
                                       c("demonstration"="50",
@@ -135,20 +135,19 @@ ui <- navbarPage("Beskattningsmodell fÃ¶r honbjÃ¶rnar V04.2023", id = "tabs",
                           ,
                           br(),br(),
                           dataTableOutput("tableID")
-
+                          
                           ,
                           br(),br(),
                           actionButton("go", "Ta en 'screenshot'")
                  ),
-                 tabPanel("HjÃ¥lp",
+                 tabPanel("Hjålp",
                           br(),br(),
-                          'Om du behÃ¶ver hjÃ¤lp vÃ¤nligen kontakta oss pÃ¥',
+                          'Om du behöver hjälp vänligen kontakta oss på',
                           HTML('<a href="mailto:bearmodel@nina.no?">bearmodel@nina.no</a>')
                  )
 )
 
-# Define server logic required to draw a histogram
-# Define server logic required to draw a histogram
+# Define server logic 
 server <- function(input, output, session) {
   data_internal <- reactiveValues(
     raw=NULL,
@@ -158,18 +157,30 @@ server <- function(input, output, session) {
     raw=NULL
   )
   output$high <- renderUI({
-    numericInput("HighRange", "Ã–vre:", input$lowRange+1, min = input$lowRange+1, max = 1000)
+    numericInput("HighRange", "Övre:", input$lowRange+1, min = input$lowRange+1, max = 1000)
   })
-
-
-
+  
+  # renderUI to allow multiple quotas 
+  
+  output$female_harvest_inputs <- renderUI({
+    req(input$forecast)  # Ensure years_to_forecast is available
+    
+    num_years <- min(5, input$forecast)  # Limit to 5 years max
+    
+    lapply(1:num_years, function(i) {
+      numericInput(paste0("female_harvest_", i), 
+                   paste("År", i, "Honbjörnar"), 
+                   value = 25, min = 0, max = 1000)
+    })
+  })  
+  
   observeEvent(input$harvestdata, {
     data_internal$raw<- read_delim(
       file = input$harvestdata$datapath,
       delim = ";",
       escape_double = FALSE,
       trim_ws = TRUE)
-
+    
     output$data_summary <- renderPrint({
       if(!is.null(data_internal$raw)){
         cat(paste0(
@@ -184,31 +195,31 @@ server <- function(input, output, session) {
         ))
       }
     })
-
+    
     output$view<-renderTable({
       if(!is.null(data_internal$raw)){
         data_internal$raw
       }
     })
-
+    
     output$census<-renderUI({
       numericInput("census_yr", "census year", min(data_internal$raw[1]), min=2000, max= lubridate::year(Sys.Date()))
     })
-
-
-
+    
+    
+    
   })
-
-
-
-
-
+  
+  
+  
+  
+  
   observeEvent(input$run_model, {
     if(input$zeroRem=='Yes'){
       data_internal$reshape<<-data_internal$raw%>%
-        rename(Ã…r = 1) |>
+        rename(År = 1) |>
         rename(Alder=2) |>
-        group_by(Ã…r,Alder)  |>
+        group_by(År,Alder)  |>
         rowwise() |>
         mutate(Alder=
                  replace_na(
@@ -218,40 +229,67 @@ server <- function(input, output, session) {
                           prob=harvest_age$Andel))) |>
         summarise(Antall=n()) |>
         ungroup() |>
-        complete(Alder=0:19, nesting(Ã…r=(input$census_yr+1):input$this_yr-1), fill=list(Antall=0))  |>
-        group_by(Ã…r, Alder) |>
+        complete(Alder=0:19, nesting(År=(input$census_yr+1):input$this_yr-1), fill=list(Antall=0))  |>
+        group_by(År, Alder) |>
         summarise(Antall=sum(Antall)) |>
-        pivot_wider(names_from=Ã…r, values_from=Antall) |>
+        pivot_wider(names_from=År, values_from=Antall) |>
         select(-Alder)  |>
         as.matrix()
-
-
+      
+      female_harvest_values <- sapply(1:min(5, input$years_to_forecast), function(i) {
+        input[[paste0("female_harvest_", i)]]
+      })
+      
       data=run_bear(lowest=input$lowRange, highest=input$HighRange,years_since=as.numeric(input$this_yr-input$census_yr),years_to_forecast=as.numeric(input$forecast),
-                    female_harvest=input$female_harvest, removals=data_internal$reshape, nsim=as.numeric(input$iters))
+                    female_harvest=female_harvest_values, removals=data_internal$reshape, nsim=as.numeric(input$iters))
       N_bear_tibble=as_tibble(data)
-
+      
       N_bear_tibble1=as_tibble(N_bear_tibble[,1:as.numeric(input$this_yr-input$census_yr)])
-
+      
       N_bear_tibble2=as_tibble(N_bear_tibble[, c(as.numeric((input$this_yr-input$census_yr)+1):as.numeric((input$this_yr-input$census_yr)+input$forecast))])
-
-
+      
+      
       N_bear_tibble1=N_bear_tibble1%>%
         pivot_longer(cols=everything(),names_to = "year", values_to="bears") %>%
         mutate(year=gsub("V", "", year)) %>%
         mutate(year=as.numeric(year)+input$census_yr-1) %>%
-        mutate(label="Rekonstruerat bestÃ¥nd")
-
+        mutate(label="Rekonstruerat bestånd")
+      
       N_bear_tibble2=N_bear_tibble2%>%
         pivot_longer(cols=everything(),names_to = "year", values_to="bears") %>%
         mutate(year=gsub("V", "", year)) %>%
         mutate(year=as.numeric(year)+input$census_yr-1)%>%
         mutate(label="Prognos")
-
+      
       N_bear_tibble3<-reactive(bind_rows(N_bear_tibble1, N_bear_tibble2))
-
-
+      
+      
       output$plot1=renderPlotly({
-
+        harvest_values <- sapply(1:min(5, input$years_to_forecast), function(i) {
+          value <- input[[paste0("female_harvest_", i)]]
+          if (length(value) == 1) {
+            return(value)  # Ensure only a single value is returned
+          } else {
+            return(NA)  # If there's an issue, return NA for that year
+          }
+        })
+        
+        # Remove any NA values from harvest_values
+        harvest_values <- na.omit(harvest_values)
+        
+        # Check if all values are the same
+        if (length(unique(harvest_values)) == 1) {
+          # If all values are the same, return just that value
+          harvest_text <- as.character(harvest_values[1])
+        } else {
+          # If values are different, format them with "og" before the last value
+          harvest_text <- paste(
+            paste(harvest_values[-length(harvest_values)], collapse = ", "),
+            "og", harvest_values[length(harvest_values)],
+            sep = " "
+          )
+        }
+        
         plot=N_bear_tibble3()%>%
           ggplot(aes(as.integer(year), bears, group=year, fill=label))+
           geom_violin(col="grey",alpha=0.6)+
@@ -263,34 +301,57 @@ server <- function(input, output, session) {
           scale_x_continuous(breaks = input$census_yr:(input$this_yr+input$forecast+1))+
           theme(legend.title= element_blank())+
           scale_fill_brewer(palette="Dark2")+
-          ggtitle(paste0("Rekonstruktion av hondjurspopulationen frÃ¥n ", input$census_yr,
-                         " Inventering och prognos frÃ¥n ",input$this_yr, " med Ã¥rligt jaktuttag pÃ¥ ", input$female_harvest, " honor"))
-
-
+          ggtitle(paste0("Rekonstruktion av hondjurspopulationen från ", input$census_yr,
+                         " Inventering och prognos från ",input$this_yr, " med årligt jaktuttag på ", harvest_text, " honor"))
+        
+        
         plotly::ggplotly(plot,tooltip="text")%>%
           style(hoverinfo = 'none')
-
       })
       output$tableID<-renderDataTable({
+        harvest_values <- sapply(1:min(5, input$years_to_forecast), function(i) {
+          value <- input[[paste0("female_harvest_", i)]]
+          if (length(value) == 1) {
+            return(value)  # Ensure only a single value is returned
+          } else {
+            return(NA)  # If there's an issue, return NA for that year
+          }
+        })
+        
+        # Remove any NA values from harvest_values
+        harvest_values <- na.omit(harvest_values)
+        
+        # Check if all values are the same
+        if (length(unique(harvest_values)) == 1) {
+          # If all values are the same, return just that value
+          harvest_text <- as.character(harvest_values[1])
+        } else {
+          # If values are different, format them with "og" before the last value
+          harvest_text <- paste(
+            paste(harvest_values[-length(harvest_values)], collapse = ", "),
+            "og", harvest_values[length(harvest_values)],
+            sep = " "
+          )
+        }
         tab=N_bear_tibble3() %>%
           group_by(year) %>%
           summarise(mean.bears = mean(bears, na.rm = TRUE),
                     hdi=ggdist::hdci(bears)) %>%
-          mutate("Ã…r"=year) %>%
-          mutate("MedelvÃ¤rde antal honor"= mean.bears,
-
+          mutate("År"=year) %>%
+          mutate("Medelvärde antal honor"= mean.bears,
+                 
                  "Undre konfidensintervall"= round(hdi[,1],2),
-
-                 "Ã–vre konfidensintervall"= round(hdi[,2],2) ) %>%
-          select("Ã…r","MedelvÃ¤rde antal honor", "Undre konfidensintervall",
-                 "Ã–vre konfidensintervall")
-
+                 
+                 "Övre konfidensintervall"= round(hdi[,2],2) ) %>%
+          select("År","Medelvärde antal honor", "Undre konfidensintervall",
+                 "Övre konfidensintervall")
+        
         datatable(tab,
-                  caption = paste0("Rekonstruktion av hondjurspopulationen frÃ¥n ", input$census_yr,
-                                   " Inventering och prognos frÃ¥n ",input$this_yr, " med Ã¥rligt jaktuttag pÃ¥ ", input$female_harvest, " honor"),
-
+                  caption = paste0("Rekonstruktion av hondjurspopulationen från ", input$census_yr,
+                                   " Inventering och prognos från ",input$this_yr, " med årligt jaktuttag på ", harvest_text, " honor"),
+                  
                   extensions = 'Buttons',
-
+                  
                   options = list(
                     paging = TRUE,
                     searching = TRUE,
@@ -298,40 +359,68 @@ server <- function(input, output, session) {
                     autoWidth = TRUE,
                     ordering = TRUE,
                     dom = 'tB',
-                    buttons = c('pdf''copy', 'csv', 'excel'
+                    buttons = c('pdf', 'copy', 'csv', 'excel'
                     )
                   ),
-
+                  
                   class = "display"
         )
       })
-
+      
     }else{
       removals$raw<-matrix(0, ncol=input$this_yr-input$census_yr1, nrow=20)
+      female_harvest_values <- sapply(1:min(5, input$years_to_forecast), function(i) {
+        input[[paste0("female_harvest_", i)]]
+      })
       data=run_bear(lowest=input$lowRange, highest=input$HighRange,years_since=as.numeric(input$this_yr-input$census_yr1),years_to_forecast=as.numeric(input$forecast),
-                    female_harvest=input$female_harvest, removals=removals$raw, nsim=as.numeric(input$iters))
+                    female_harvest=female_harvest_values, removals=removals$raw, nsim=as.numeric(input$iters))
       N_bear_tibble=as_tibble(data)
-
+      
       N_bear_tibble1=as_tibble(N_bear_tibble[,1:as.numeric(input$this_yr-input$census_yr1+1)])
       N_bear_tibble2=as_tibble(N_bear_tibble[, c(as.numeric((input$this_yr-input$census_yr1)+2):as.numeric((input$this_yr-input$census_yr1)+input$forecast+1))])
-
-
+      
+      
       N_bear_tibble1=N_bear_tibble1%>%
         pivot_longer(cols=everything(),names_to = "year", values_to="bears") %>%
         mutate(year=gsub("V", "", year)) %>%
         mutate(year=as.numeric(year)+input$census_yr1-1) %>%
         mutate(label="reconstruction")
-
+      
       N_bear_tibble2=N_bear_tibble2%>%
         pivot_longer(cols=everything(),names_to = "year", values_to="bears") %>%
         mutate(year=gsub("V", "", year)) %>%
         mutate(year=as.numeric(year)+input$census_yr1-1)%>%
         mutate(label="forecast")
-
-
+      
+      
       N_bear_tibble3<-reactive(bind_rows(N_bear_tibble1, N_bear_tibble2))
       output$plot1=renderPlotly({
-
+        harvest_values <- sapply(1:min(5, input$years_to_forecast), function(i) {
+          value <- input[[paste0("female_harvest_", i)]]
+          if (length(value) == 1) {
+            return(value)  # Ensure only a single value is returned
+          } else {
+            return(NA)  # If there's an issue, return NA for that year
+          }
+        })
+        
+        # Remove any NA values from harvest_values
+        harvest_values <- na.omit(harvest_values)
+        
+        # Check if all values are the same
+        if (length(unique(harvest_values)) == 1) {
+          # If all values are the same, return just that value
+          harvest_text <- as.character(harvest_values[1])
+        } else {
+          # If values are different, format them with "og" before the last value
+          harvest_text <- paste(
+            paste(harvest_values[-length(harvest_values)], collapse = ", "),
+            "og", harvest_values[length(harvest_values)],
+            sep = " "
+          )
+        }
+        
+        
         plot=N_bear_tibble3() %>%
           ggplot(aes(as.integer(year), bears, group=year, fill=label))+
           geom_violin(col="grey",alpha=0.6)+
@@ -343,31 +432,55 @@ server <- function(input, output, session) {
           scale_x_continuous(breaks = input$census_yr1:(input$this_yr+input$forecast+1))+
           theme(legend.title= element_blank())+
           scale_fill_brewer(palette="Dark2")+
-          ggtitle(paste0("Rekonstruktion av hondjurspopulationen frÃ¥n ", input$census_yr1,
-                         " Inventering och prognos frÃ¥n ",input$this_yr, " med Ã¥rligt jaktuttag pÃ¥ ", input$female_harvest, " honor"))
-
+          ggtitle(paste0("Rekonstruktion av hondjurspopulationen från ", input$census_yr1,
+                         " Inventering och prognos från ",input$this_yr, " med årligt jaktuttag på ", harvest_text, " honor"))
+        
         plotly::ggplotly(plot,tooltip="text")%>%
           style(hoverinfo = 'none')
       })
       output$tableID<-renderDataTable({
+        harvest_values <- sapply(1:min(5, input$years_to_forecast), function(i) {
+          value <- input[[paste0("female_harvest_", i)]]
+          if (length(value) == 1) {
+            return(value)  # Ensure only a single value is returned
+          } else {
+            return(NA)  # If there's an issue, return NA for that year
+          }
+        })
+        
+        # Remove any NA values from harvest_values
+        harvest_values <- na.omit(harvest_values)
+        
+        # Check if all values are the same
+        if (length(unique(harvest_values)) == 1) {
+          # If all values are the same, return just that value
+          harvest_text <- as.character(harvest_values[1])
+        } else {
+          # If values are different, format them with "og" before the last value
+          harvest_text <- paste(
+            paste(harvest_values[-length(harvest_values)], collapse = ", "),
+            "og", harvest_values[length(harvest_values)],
+            sep = " "
+          )
+        }
         tab=N_bear_tibble3() %>%
           group_by(year) %>%
           summarise(mean.bears = mean(bears, na.rm = TRUE),
                     hdi=ggdist::hdci(bears)) %>%
-          mutate("Ã…r"=year) %>%
-          mutate("MedelvÃ¤rde antal honor"= mean.bears,
-
+          mutate("År"=year) %>%
+          mutate("Medelvärde antal honor"= mean.bears,
+                 
                  "Undre konfidensintervall"= round(hdi[,1],2),
-
-                 "Ã–vre konfidensintervall"= round(hdi[,2],2) ) %>%
-          select("Ã…r","MedelvÃ¤rde antal honor", "Undre konfidensintervall",
-                 "Ã–vre konfidensintervall")
-
+                 
+                 "Övre konfidensintervall"= round(hdi[,2],2) ) %>%
+          select("År","Medelvärde antal honor", "Undre konfidensintervall",
+                 "Övre konfidensintervall")
+        
         datatable(tab,
-                  caption = paste0("Rekonstruktion av hondjurspopulationen frÃ¥n ", input$census_yr1,
-                                   " Inventering och prognos frÃ¥n ",input$this_yr, " med Ã¥rligt jaktuttag pÃ¥ ", input$female_harvest, " honor"),
+                  caption = paste0("Rekonstruktion av hondjurspopulationen från ", input$census_yr1,
+                                   " Inventering och prognos från ",input$this_yr, " med årligt jaktuttag på ", harvest_text, " honor"),
                   extensions = 'Buttons',
-
+                  
                   options = list(
                     paging = TRUE,
                     searching = TRUE,
@@ -375,20 +488,21 @@ server <- function(input, output, session) {
                     autoWidth = TRUE,
                     ordering = TRUE,
                     dom = 'tB',
-
-                    buttons = c('copy', 'csv', 'excel','pdf')
+                    
+                    buttons = c('copy', 'csv', 'excel',
+                                'pdf')
                   ),
-
+                  
                   class = "display"
         )
-
+        
       })
     }
-
-
-
-
-
+    
+    
+    
+    
+    
     observeEvent(input$go, {
       screenshot()
     })
