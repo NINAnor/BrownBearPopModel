@@ -27,7 +27,7 @@ run_bear=function(lowest, highest,years_since,years_to_forecast,female_harvest,r
   ## Loop through all the iterations
   ## Return the whole n_bear/N_Bear matrices for plotting
   
-  nyear=sum(years_since+years_to_forecast)-1
+  nyear=sum(years_since+years_to_forecast)
   
   
   
@@ -77,8 +77,9 @@ run_bear=function(lowest, highest,years_since,years_to_forecast,female_harvest,r
   
   ###############################################
   #### removals_tot
-  removals_tot <-  cbind(removals[,-1,drop=FALSE], removals_f)
+  removals_tot <-  cbind(removals, removals_f)
   removals_tot[is.na(removals_tot)] <- 0
+  removals_tot[,1]<-0
   
   ###############################################
   ##### simulate x j=nsim x i=nyear
