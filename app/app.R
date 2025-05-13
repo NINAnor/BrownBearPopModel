@@ -23,7 +23,7 @@ suppressPackageStartupMessages({
 
 options(shiny.sanitize.errors = TRUE)
 
-source('R/run_bear.R')
+source('run_bear.R')
 harvest_age<-readRDS("data/harvest_age.rds")
 
 # error supression CSS
@@ -33,7 +33,7 @@ tags$style(type="text/css",
 )
 
 # Define UI for application
-ui <- navbarPage("Beskattningsmodell för honbjörnar V01.2025", id = "tabs",
+ui <- navbarPage("Beskattningsmodell för honbjörnar V02.2025", id = "tabs",
                  tabPanel("Hem",
                           htmltools::includeMarkdown("www/front_matter.md")
                  ),
@@ -111,6 +111,7 @@ ui <- navbarPage("Beskattningsmodell för honbjörnar V01.2025", id = "tabs",
                                           numericInput("forecast", "år", 5, min = 1, max = 5),
                                           br(), br(),
                                           '6: Avskjutning av honor per år i ditt område:',
+                                          checkboxInput("multiple_harvests", "Ange jaktuttag per år?", value = FALSE),
                                           uiOutput("female_harvest_inputs")
                                           
                           ))
@@ -140,7 +141,7 @@ ui <- navbarPage("Beskattningsmodell för honbjörnar V01.2025", id = "tabs",
                           br(),br(),
                           actionButton("go", "Ta en 'screenshot'")
                  ),
-                 tabPanel("Hjålp",
+                 tabPanel("Hjälp",
                           br(),br(),
                           'Om du behöver hjälp vänligen kontakta oss på',
                           HTML('<a href="mailto:bearmodel@nina.no?">bearmodel@nina.no</a>')
@@ -163,16 +164,24 @@ server <- function(input, output, session) {
   # renderUI to allow multiple quotas 
   
   output$female_harvest_inputs <- renderUI({
-    req(input$forecast)  # Ensure years_to_forecast is available
+    req(input$forecast)
     
-    num_years <- min(5, input$forecast)  # Limit to 5 years max
+    num_years <- min(5, input$forecast)
     
-    lapply(1:num_years, function(i) {
-      numericInput(paste0("female_harvest_", i), 
-                   paste("År", i, "Honbjörnar"), 
+    if (isTRUE(input$multiple_harvests)) {
+      # If user wants to input per year
+      lapply(1:num_years, function(i) {
+        numericInput(paste0("female_harvest_", i), 
+                     paste("År", i, "Honbjörnar"), 
+                     value = 25, min = 0, max = 1000)
+      })
+    } else {
+      # Single input for all years
+      numericInput("female_harvest_all", 
+                   "Jaktuttag (gäller alla år)", 
                    value = 25, min = 0, max = 1000)
-    })
-  })  
+    }
+  })
   
   observeEvent(input$harvestdata, {
     data_internal$raw<- read_delim(
@@ -184,13 +193,13 @@ server <- function(input, output, session) {
     output$data_summary <- renderPrint({
       if(!is.null(data_internal$raw)){
         cat(paste0(
-          "You've uploaded a dataset containing ", nrow(data_internal$raw),
-          " rows and ", ncol(data_internal$raw),
-          " columns. If this is not what you expected, you might want to",
-          " restructure the file and try again.<br>",
-          "<br> Detected column names as follows:<br>",
+          "Du har laddat upp en dataset med ", nrow(data_internal$raw),
+          " rader och ", ncol(data_internal$raw),
+          " kolumner. Om detta inte var vad du förväntade dig kan du behöva",
+          " strukturera om filen och försöka igen.<br>",
+          "<br> Identifierade kolumnnamn:<br>",
           paste(colnames(data_internal$raw), collapse = "<br>"),
-          "<br> Detected census year: ",
+          "<br> Identifierat inventeringsår: ",
           min(data_internal$raw[1])
         ))
       }
@@ -219,6 +228,7 @@ server <- function(input, output, session) {
       data_internal$reshape<<-data_internal$raw%>%
         rename(År = 1) |>
         rename(Alder=2) |>
+        mutate(Alder=pmin(Alder,19)) |>
         group_by(År,Alder)  |>
         rowwise() |>
         mutate(Alder=
@@ -236,13 +246,17 @@ server <- function(input, output, session) {
         select(-Alder)  |>
         as.matrix()
       
-      female_harvest_values <- sapply(1:min(5, input$years_to_forecast), function(i) {
-        input[[paste0("female_harvest_", i)]]
-      })
+      if (isTRUE(input$multiple_harvests)) {
+        female_harvest_values <- sapply(1:min(5, input$forecast), function(i) {
+          input[[paste0("female_harvest_", i)]]
+        })
+      } else {
+        female_harvest_values <- rep(input$female_harvest_all, min(5, input$forecast))
+      }
       
       data=run_bear(lowest=input$lowRange, highest=input$HighRange,years_since=as.numeric(input$this_yr-input$census_yr),years_to_forecast=as.numeric(input$forecast),
                     female_harvest=female_harvest_values, removals=data_internal$reshape, nsim=as.numeric(input$iters))
-      N_bear_tibble=as_tibble(data)
+      N_bear_tibble=as_tibble(data$post)
       
       N_bear_tibble1=as_tibble(N_bear_tibble[,1:as.numeric(input$this_yr-input$census_yr)])
       
@@ -263,32 +277,41 @@ server <- function(input, output, session) {
       
       N_bear_tibble3<-reactive(bind_rows(N_bear_tibble1, N_bear_tibble2))
       
-      
       output$plot1=renderPlotly({
-        harvest_values <- sapply(1:min(5, input$years_to_forecast), function(i) {
-          value <- input[[paste0("female_harvest_", i)]]
-          if (length(value) == 1) {
-            return(value)  # Ensure only a single value is returned
+        if (isTRUE(input$multiple_harvests)) {
+          harvest_values <- vapply(
+            1:min(5, input$years_to_forecast),
+            function(i) {
+              val <- input[[paste0("female_harvest_", i)]]
+              if (!is.null(val) && val != "") as.numeric(val) else NA_real_
+            },
+            numeric(1)
+          )
+        } else {
+          # Single harvest value
+          val <- input$female_harvest_all
+          if (!is.null(val) && val != "") {
+            cat("Harvest single value: ", as.numeric(input$female_harvest_all), "\n")
+            harvest_values <- rep(as.numeric(val), min(5, input$years_to_forecast))
           } else {
-            return(NA)  # If there's an issue, return NA for that year
+            harvest_values <- rep(NA_real_, min(5, input$years_to_forecast))
           }
-        })
+        }
         
-        # Remove any NA values from harvest_values
         harvest_values <- na.omit(harvest_values)
         
-        # Check if all values are the same
-        if (length(unique(harvest_values)) == 1) {
-          # If all values are the same, return just that value
+        if (length(harvest_values) == 0) {
+          harvest_text <- "inga värden"
+        } else if (length(unique(harvest_values)) == 1) {
           harvest_text <- as.character(harvest_values[1])
         } else {
-          # If values are different, format them with "og" before the last value
           harvest_text <- paste(
             paste(harvest_values[-length(harvest_values)], collapse = ", "),
-            "og", harvest_values[length(harvest_values)],
-            sep = " "
+            "och", harvest_values[length(harvest_values)]
           )
         }
+        
+        
         
         plot=N_bear_tibble3()%>%
           ggplot(aes(as.integer(year), bears, group=year, fill=label))+
@@ -309,16 +332,28 @@ server <- function(input, output, session) {
           style(hoverinfo = 'none')
       })
       output$tableID<-renderDataTable({
-        harvest_values <- sapply(1:min(5, input$years_to_forecast), function(i) {
-          value <- input[[paste0("female_harvest_", i)]]
-          if (length(value) == 1) {
-            return(value)  # Ensure only a single value is returned
+        # Get harvest values depending on toggle
+        if (isTRUE(input$multiple_harvests)) {
+          # Multiple harvest inputs (e.g. female_harvest_1, female_harvest_2, ...)
+          harvest_values <- vapply(
+            1:min(5, input$years_to_forecast),
+            function(i) {
+              val <- input[[paste0("female_harvest_", i)]]
+              if (!is.null(val) && !is.na(val)) as.numeric(val) else NA_real_
+            },
+            numeric(1)
+          )
+        } else {
+          # Single harvest value applied to all forecast years
+          harvest_value_all <- input$female_harvest_all
+          if (!is.null(harvest_value_all) && !is.na(harvest_value_all)) {
+            harvest_values <- rep(as.numeric(harvest_value_all), min(5, input$years_to_forecast))
           } else {
-            return(NA)  # If there's an issue, return NA for that year
+            harvest_values <- rep(NA_real_, min(5, input$years_to_forecast))
           }
-        })
+        }
         
-        # Remove any NA values from harvest_values
+        # Remove NAs
         harvest_values <- na.omit(harvest_values)
         
         # Check if all values are the same
@@ -354,12 +389,14 @@ server <- function(input, output, session) {
                   
                   options = list(
                     paging = TRUE,
+                    pageLength = 20,  
                     searching = TRUE,
                     fixedColumns = TRUE,
                     autoWidth = TRUE,
                     ordering = TRUE,
                     dom = 'tB',
-                    buttons = c('pdf', 'copy', 'csv', 'excel')
+                    buttons = c('pdf', 'copy', 'csv', 'excel'
+                    )
                   ),
                   
                   class = "display"
@@ -368,12 +405,17 @@ server <- function(input, output, session) {
       
     }else{
       removals$raw<-matrix(0, ncol=input$this_yr-input$census_yr1, nrow=20)
-      female_harvest_values <- sapply(1:min(5, input$years_to_forecast), function(i) {
-        input[[paste0("female_harvest_", i)]]
-      })
+      
+      if (isTRUE(input$multiple_harvests)) {
+        female_harvest_values <- sapply(1:min(5, input$forecast), function(i) {
+          input[[paste0("female_harvest_", i)]]
+        })
+      } else {
+        female_harvest_values <- rep(input$female_harvest_all, min(5, input$forecast))
+      }
       data=run_bear(lowest=input$lowRange, highest=input$HighRange,years_since=as.numeric(input$this_yr-input$census_yr1),years_to_forecast=as.numeric(input$forecast),
                     female_harvest=female_harvest_values, removals=removals$raw, nsim=as.numeric(input$iters))
-      N_bear_tibble=as_tibble(data)
+      N_bear_tibble=as_tibble(data$post)
       
       N_bear_tibble1=as_tibble(N_bear_tibble[,1:as.numeric(input$this_yr-input$census_yr1+1)])
       N_bear_tibble2=as_tibble(N_bear_tibble[, c(as.numeric((input$this_yr-input$census_yr1)+2):as.numeric((input$this_yr-input$census_yr1)+input$forecast+1))])
@@ -394,31 +436,38 @@ server <- function(input, output, session) {
       
       N_bear_tibble3<-reactive(bind_rows(N_bear_tibble1, N_bear_tibble2))
       output$plot1=renderPlotly({
-        harvest_values <- sapply(1:min(5, input$years_to_forecast), function(i) {
-          value <- input[[paste0("female_harvest_", i)]]
-          if (length(value) == 1) {
-            return(value)  # Ensure only a single value is returned
-          } else {
-            return(NA)  # If there's an issue, return NA for that year
-          }
-        })
-        
-        # Remove any NA values from harvest_values
-        harvest_values <- na.omit(harvest_values)
-        
-        # Check if all values are the same
-        if (length(unique(harvest_values)) == 1) {
-          # If all values are the same, return just that value
-          harvest_text <- as.character(harvest_values[1])
-        } else {
-          # If values are different, format them with "og" before the last value
-          harvest_text <- paste(
-            paste(harvest_values[-length(harvest_values)], collapse = ", "),
-            "og", harvest_values[length(harvest_values)],
-            sep = " "
+        if (isTRUE(input$multiple_harvests)) {
+          harvest_values <- vapply(
+            1:min(5, input$years_to_forecast),
+            function(i) {
+              val <- input[[paste0("female_harvest_", i)]]
+              if (!is.null(val) && val != "") as.numeric(val) else NA_real_
+            },
+            numeric(1)
           )
+        } else {
+          # Single harvest value
+          val <- input$female_harvest_all
+          if (!is.null(val) && val != "") {
+            cat("Harvest single value: ", as.numeric(input$female_harvest_all), "\n")
+            harvest_values <- rep(as.numeric(val), min(5, input$years_to_forecast))
+          } else {
+            harvest_values <- rep(NA_real_, min(5, input$years_to_forecast))
+          }
         }
         
+        harvest_values <- na.omit(harvest_values)
+        
+        if (length(harvest_values) == 0) {
+          harvest_text <- "inga värden"
+        } else if (length(unique(harvest_values)) == 1) {
+          harvest_text <- as.character(harvest_values[1])
+        } else {
+          harvest_text <- paste(
+            paste(harvest_values[-length(harvest_values)], collapse = ", "),
+            "och", harvest_values[length(harvest_values)]
+          )
+        }
         
         plot=N_bear_tibble3() %>%
           ggplot(aes(as.integer(year), bears, group=year, fill=label))+
@@ -437,68 +486,75 @@ server <- function(input, output, session) {
         plotly::ggplotly(plot,tooltip="text")%>%
           style(hoverinfo = 'none')
       })
-      output$tableID<-renderDataTable({
-        harvest_values <- sapply(1:min(5, input$years_to_forecast), function(i) {
-          value <- input[[paste0("female_harvest_", i)]]
-          if (length(value) == 1) {
-            return(value)  # Ensure only a single value is returned
+   
+      output$tableID <- renderDataTable({
+        if (isTRUE(input$multiple_harvests)) {
+          harvest_values <- vapply(
+            1:min(5, input$years_to_forecast),
+            function(i) {
+              val <- input[[paste0("female_harvest_", i)]]
+              if (!is.null(val) && val != "") as.numeric(val) else NA_real_
+            },
+            numeric(1)
+          )
+        } else {
+          # Single harvest value
+          val <- input$female_harvest_all
+          if (!is.null(val) && val != "") {
+            cat("Harvest single value: ", as.numeric(input$female_harvest_all), "\n")
+            harvest_values <- rep(as.numeric(val), min(5, input$years_to_forecast))
           } else {
-            return(NA)  # If there's an issue, return NA for that year
+            harvest_values <- rep(NA_real_, min(5, input$years_to_forecast))
           }
-        })
+        }
         
-        # Remove any NA values from harvest_values
         harvest_values <- na.omit(harvest_values)
         
-        # Check if all values are the same
-        if (length(unique(harvest_values)) == 1) {
-          # If all values are the same, return just that value
+        if (length(harvest_values) == 0) {
+          harvest_text <- "inga värden"
+        } else if (length(unique(harvest_values)) == 1) {
           harvest_text <- as.character(harvest_values[1])
         } else {
-          # If values are different, format them with "og" before the last value
           harvest_text <- paste(
             paste(harvest_values[-length(harvest_values)], collapse = ", "),
-            "og", harvest_values[length(harvest_values)],
-            sep = " "
+            "och", harvest_values[length(harvest_values)]
           )
-        }
-        tab=N_bear_tibble3() %>%
+        } 
+        tab <- N_bear_tibble3() %>%
           group_by(year) %>%
-          summarise(mean.bears = mean(bears, na.rm = TRUE),
-                    hdi=ggdist::hdci(bears)) %>%
-          mutate("År"=year) %>%
-          mutate("Medelvärde antal honor"= mean.bears,
-                 
-                 "Undre konfidensintervall"= round(hdi[,1],2),
-                 
-                 "Övre konfidensintervall"= round(hdi[,2],2) ) %>%
-          select("År","Medelvärde antal honor", "Undre konfidensintervall",
-                 "Övre konfidensintervall")
-        
+          summarise(
+            mean.bears = mean(bears, na.rm = TRUE),
+            lower = tryCatch(ggdist::hdci(bears)[1], error = function(e) NA),
+            upper = tryCatch(ggdist::hdci(bears)[2], error = function(e) NA),
+            .groups = "drop"
+          ) %>%
+          mutate("År" = year,
+                 "Medelvärde antal honor" = mean.bears,
+                 "Undre konfidensintervall" = round(lower, 2),
+                 "Övre konfidensintervall" = round(upper, 2)) %>%
+          select("År", "Medelvärde antal honor", "Undre konfidensintervall", "Övre konfidensintervall")
         datatable(tab,
-                  caption = paste0("Rekonstruktion av hondjurspopulationen från ", input$census_yr1,
-                                   " Inventering och prognos från ",input$this_yr, " med årligt jaktuttag på ", harvest_text, " honor"),
+                  caption = paste0(
+                    "Rekonstruktion av hondjurspopulationen från ", input$census_yr1,
+                    " Inventering och prognos från ", input$this_yr,
+                    " med årligt jaktuttag på ", harvest_text, " honor"
+                  ),
                   extensions = 'Buttons',
-                  
                   options = list(
                     paging = TRUE,
+                    pageLength = 20,  
                     searching = TRUE,
                     fixedColumns = TRUE,
                     autoWidth = TRUE,
                     ordering = TRUE,
                     dom = 'tB',
-                    
-                    buttons = c('copy', 'csv', 'excel',
-                                'pdf')
+                    buttons = c('copy', 'csv', 'excel', 'pdf')
                   ),
-                  
+                  rownames = FALSE,
                   class = "display"
         )
-        
       })
     }
-    
-    
     
     
     
