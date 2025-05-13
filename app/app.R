@@ -33,7 +33,7 @@ tags$style(type="text/css",
 )
 
 # Define UI for application
-ui <- navbarPage("Beskattningsmodell för honbjörnar V02.2025", id = "tabs",
+ui <- navbarPage("Beskattningsmodell för honbjörnar V03.2025", id = "tabs",
                  tabPanel("Hem",
                           htmltools::includeMarkdown("www/front_matter.md")
                  ),
