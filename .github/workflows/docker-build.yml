@@ -17,6 +17,7 @@ on:
 jobs:
   docker-build-push:
     # Run on PRs to production/test OR manual trigger
+    name: docker / build-and-push
     if: contains(fromJson('["production", "test"]'), github.base_ref) || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
