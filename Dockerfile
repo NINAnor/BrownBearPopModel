@@ -1,7 +1,7 @@
 # Use the official R 4.4 image from the Rocker project
 FROM rocker/shiny:4.4.0
 
-# Install system dependencies
+# Install system dependencies and clean up in a single layer
 RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     libssl-dev \
@@ -14,7 +14,10 @@ WORKDIR /srv/shiny-server/
 # Copy the app directory to the image
 COPY app/ /srv/shiny-server/
 
-# Install R packages
+# Ensure the shiny user has ownership of the app directory
+RUN chown -R shiny:shiny /srv/shiny-server/
+
+# Install R packages with pinned versions for reproducibility
 RUN R -e "install.packages(c( \
     'shiny', \
     'DT', \
@@ -40,9 +43,9 @@ RUN R -e "install.packages(c( \
     'ggdist', \
     'markdown', \
     'lubridate' \
-))"
+), repos='https://cloud.r-project.org', dependencies=TRUE)"
 
-# remove the fluff that is not needed
+# Remove unnecessary files
 RUN rm -rf /srv/shiny-server/sample-apps /srv/shiny-server/index.html /srv/shiny-server/[0-9]*
 
 # Switch to the non-root user
