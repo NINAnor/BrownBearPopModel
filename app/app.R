@@ -283,7 +283,7 @@ server <- function(input, output, session) {
         lowest = input$lowRange, highest = input$HighRange, years_since = as.numeric(input$this_yr - input$census_yr), years_to_forecast = as.numeric(input$forecast),
         female_harvest = female_harvest_values, removals = data_internal$reshape, nsim = as.numeric(input$iters)
       )
-      N_bear_tibble <- as_tibble(data$post)
+      N_bear_tibble <- as_tibble(data)
 
       N_bear_tibble1 <- as_tibble(N_bear_tibble[, 1:as.numeric(input$this_yr - input$census_yr)])
 
@@ -445,7 +445,7 @@ server <- function(input, output, session) {
         lowest = input$lowRange, highest = input$HighRange, years_since = as.numeric(input$this_yr - input$census_yr1), years_to_forecast = as.numeric(input$forecast),
         female_harvest = female_harvest_values, removals = removals$raw, nsim = as.numeric(input$iters)
       )
-      N_bear_tibble <- as_tibble(data$post)
+      N_bear_tibble <- as_tibble(data)
       N_bear_tibble1 <- as_tibble(N_bear_tibble[, 1:as.numeric(input$this_yr - input$census_yr1 + 1)])
       N_bear_tibble2 <- as_tibble(N_bear_tibble[, c(as.numeric((input$this_yr - input$census_yr1) + 2):as.numeric((input$this_yr - input$census_yr1) + input$forecast + 1))])
 
