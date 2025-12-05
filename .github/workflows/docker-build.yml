@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -43,13 +45,13 @@ jobs:
         id: set-tag
         run: |
           echo "github.event_name=${{ github.event_name }}"
-          echo "github.base_ref=${{ github.base_ref }}"
+          echo "github.base_ref=${GITHUB_BASE_REF}"
           echo "inputs.branch=${{ inputs.branch }}"
 
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             TARGET_BRANCH="${{ inputs.branch }}"
           else
-            TARGET_BRANCH="${{ github.base_ref }}"
+            TARGET_BRANCH="${GITHUB_BASE_REF}"
           fi
 
           echo "TARGET_BRANCH=$TARGET_BRANCH"
