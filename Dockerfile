@@ -35,6 +35,7 @@ RUN R -e "install.packages(c( \
     'popbio', \
     'shinyvalidate', \
     'readr', \
+    'readxl', \
     'shinyBS', \
     'shinyscreenshot', \
     'ggplot2', \
