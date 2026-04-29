@@ -19,11 +19,15 @@ suppressPackageStartupMessages({
   library(readr)
   library(shinyBS)
   library(shinyscreenshot)
+  library(markdown)
+  library(lubridate)
+  library(ggdist)
+  
 })
 
 options(shiny.sanitize.errors = TRUE)
 
-source('run_bear.R')
+source('R/run_bear.R')
 harvest_age<-readRDS("data/harvest_age.rds")
 
 # error supression CSS
@@ -33,7 +37,7 @@ tags$style(type="text/css",
 )
 
 # Define UI for application
-ui <- navbarPage("Beskattningsmodell för honbjörnar V03.2025", id = "tabs",
+ui <- navbarPage("Beskattningsmodell för honbjörnar V01.2026", id = "tabs",
                  tabPanel("Hem",
                           htmltools::includeMarkdown("www/front_matter.md")
                  ),
@@ -256,7 +260,8 @@ server <- function(input, output, session) {
       
       data=run_bear(lowest=input$lowRange, highest=input$HighRange,years_since=as.numeric(input$this_yr-input$census_yr),years_to_forecast=as.numeric(input$forecast),
                     female_harvest=female_harvest_values, removals=data_internal$reshape, nsim=as.numeric(input$iters))
-      N_bear_tibble=as_tibble(data$post)
+      N_bear_tibble=as_tibble(data$pre)
+      #N_bear_tibble=as_tibble(data$post)
       
       N_bear_tibble1=as_tibble(N_bear_tibble[,1:as.numeric(input$this_yr-input$census_yr)])
       
@@ -415,7 +420,8 @@ server <- function(input, output, session) {
       }
       data=run_bear(lowest=input$lowRange, highest=input$HighRange,years_since=as.numeric(input$this_yr-input$census_yr1),years_to_forecast=as.numeric(input$forecast),
                     female_harvest=female_harvest_values, removals=removals$raw, nsim=as.numeric(input$iters))
-      N_bear_tibble=as_tibble(data$post)
+      N_bear_tibble=as_tibble(data$pre)
+      #N_bear_tibble=as_tibble(data$post)
       
       N_bear_tibble1=as_tibble(N_bear_tibble[,1:as.numeric(input$this_yr-input$census_yr1+1)])
       N_bear_tibble2=as_tibble(N_bear_tibble[, c(as.numeric((input$this_yr-input$census_yr1)+2):as.numeric((input$this_yr-input$census_yr1)+input$forecast+1))])
@@ -486,7 +492,7 @@ server <- function(input, output, session) {
         plotly::ggplotly(plot,tooltip="text")%>%
           style(hoverinfo = 'none')
       })
-   
+      
       output$tableID <- renderDataTable({
         if (isTRUE(input$multiple_harvests)) {
           harvest_values <- vapply(
