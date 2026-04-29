@@ -17,6 +17,7 @@ on:
 jobs:
   docker-build-push:
     # Run on PRs to production/test OR manual trigger
+    name: docker / build-and-push
     if: contains(fromJson('["production", "test"]'), github.base_ref) || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
@@ -37,12 +38,24 @@ jobs:
       - name: Set Docker tag based on target branch
         id: set-tag
         run: |
-          TARGET_BRANCH="${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.base_ref }}"
+          echo "github.event_name=${{ github.event_name }}"
+          echo "github.base_ref=${{ github.base_ref }}"
+          echo "inputs.branch=${{ inputs.branch }}"
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TARGET_BRANCH="${{ inputs.branch }}"
+          else
+            TARGET_BRANCH="${{ github.base_ref }}"
+          fi
+
+          echo "TARGET_BRANCH=$TARGET_BRANCH"
+
           if [[ "$TARGET_BRANCH" == "production" ]]; then
             echo "TAG=latest" >> $GITHUB_OUTPUT
           else
             echo "TAG=test" >> $GITHUB_OUTPUT
           fi
+
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
