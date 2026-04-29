@@ -162,7 +162,7 @@ server <- function(input, output, session) {
     raw=NULL
   )
   output$high <- renderUI({
-    numericInput("HighRange", "√ñvre:", input$lowRange+1, min = input$lowRange+1, max = 1000)
+    numericInput("HighRange", "√vre:", input$lowRange+1, min = input$lowRange+1, max = 1000)
   })
   
   # renderUI to allow multiple quotas 
@@ -176,7 +176,7 @@ server <- function(input, output, session) {
       # If user wants to input per year
       lapply(1:num_years, function(i) {
         numericInput(paste0("female_harvest_", i), 
-                     paste("√Ör", i, "Honbj√∂rnar"), 
+                     paste("√r", i, "Honbj√∂rnar"), 
                      value = 25, min = 0, max = 1000)
       })
     } else {
@@ -230,10 +230,10 @@ server <- function(input, output, session) {
   observeEvent(input$run_model, {
     if(input$zeroRem=='Yes'){
       data_internal$reshape<<-data_internal$raw%>%
-        rename(√Ör = 1) |>
+        rename(√r = 1) |>
         rename(Alder=2) |>
         mutate(Alder=pmin(Alder,19)) |>
-        group_by(√Ör,Alder)  |>
+        group_by(√r,Alder)  |>
         rowwise() |>
         mutate(Alder=
                  replace_na(
@@ -243,10 +243,10 @@ server <- function(input, output, session) {
                           prob=harvest_age$Andel))) |>
         summarise(Antall=n()) |>
         ungroup() |>
-        complete(Alder=0:19, nesting(√Ör=(input$census_yr+1):input$this_yr-1), fill=list(Antall=0))  |>
-        group_by(√Ör, Alder) |>
+        complete(Alder=0:19, nesting(√r=(input$census_yr+1):input$this_yr-1), fill=list(Antall=0))  |>
+        group_by(√r, Alder) |>
         summarise(Antall=sum(Antall)) |>
-        pivot_wider(names_from=√Ör, values_from=Antall) |>
+        pivot_wider(names_from=√r, values_from=Antall) |>
         select(-Alder)  |>
         as.matrix()
       
@@ -377,14 +377,14 @@ server <- function(input, output, session) {
           group_by(year) %>%
           summarise(mean.bears = mean(bears, na.rm = TRUE),
                     hdi=ggdist::hdci(bears)) %>%
-          mutate("√Ör"=year) %>%
+          mutate("√r"=year) %>%
           mutate("Medelv√§rde antal honor"= mean.bears,
                  
                  "Undre konfidensintervall"= round(hdi[,1],2),
                  
-                 "√ñvre konfidensintervall"= round(hdi[,2],2) ) %>%
-          select("√Ör","Medelv√§rde antal honor", "Undre konfidensintervall",
-                 "√ñvre konfidensintervall")
+                 "√vre konfidensintervall"= round(hdi[,2],2) ) %>%
+          select("√r","Medelv√§rde antal honor", "Undre konfidensintervall",
+                 "√vre konfidensintervall")
         
         datatable(tab,
                   caption = paste0("Rekonstruktion av hondjurspopulationen fr√•n ", input$census_yr,
@@ -534,11 +534,11 @@ server <- function(input, output, session) {
             upper = tryCatch(ggdist::hdci(bears)[2], error = function(e) NA),
             .groups = "drop"
           ) %>%
-          mutate("√Ör" = year,
+          mutate("√r" = year,
                  "Medelv√§rde antal honor" = mean.bears,
                  "Undre konfidensintervall" = round(lower, 2),
-                 "√ñvre konfidensintervall" = round(upper, 2)) %>%
-          select("√Ör", "Medelv√§rde antal honor", "Undre konfidensintervall", "√ñvre konfidensintervall")
+                 "√vre konfidensintervall" = round(upper, 2)) %>%
+          select("√r", "Medelv√§rde antal honor", "Undre konfidensintervall", "√vre konfidensintervall")
         datatable(tab,
                   caption = paste0(
                     "Rekonstruktion av hondjurspopulationen fr√•n ", input$census_yr1,
