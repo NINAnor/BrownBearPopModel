@@ -11,8 +11,10 @@ run_bear<- function(lowest, highest, years_since, years_to_forecast, female_harv
   
   ### Load libraries
   library(popbio)
-  library(readxl)
-  library(tidyverse)
+  library(boot)
+  library(dplyr)
+  library(tibble)
+  library(tidyr)
   
   #### Load data
   mort_fem <- readRDS("data/mort_feml.rds")
