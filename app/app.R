@@ -37,7 +37,7 @@ tags$style(type="text/css",
 )
 
 # Define UI for application
-ui <- navbarPage("Beskattningsmodell för honbjörnar V01.2026", id = "tabs",
+ui <- navbarPage("Beskattningsmodell för honbjörnar V02.2026", id = "tabs",
                  tabPanel("Hem",
                           htmltools::includeMarkdown("www/front_matter.md")
                  ),
@@ -162,7 +162,7 @@ server <- function(input, output, session) {
     raw=NULL
   )
   output$high <- renderUI({
-    numericInput("HighRange", "Ãvre:", input$lowRange+1, min = input$lowRange+1, max = 1000)
+    numericInput("HighRange", "Övre:", input$lowRange+1, min = input$lowRange+1, max = 1000)
   })
   
   # renderUI to allow multiple quotas 
