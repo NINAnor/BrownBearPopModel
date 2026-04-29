@@ -32,6 +32,7 @@ RUN R -e "install.packages(c( \
     'htmltools', \
     'plotly', \
     'popbio', \
+    'readxl', \
     'shinyvalidate', \
     'readr', \
     'shinyBS', \
