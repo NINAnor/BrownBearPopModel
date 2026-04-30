@@ -5,24 +5,18 @@ permissions:
   packages: write
 
 on:
-  pull_request:
+  push:
     branches: [ production, test ]
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to build'
-        required: true
-        default: 'test'
-        type: choice
-        options:
-          - test
-          - production
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_name == 'test' }}
 
 jobs:
   docker-build-push:
     # Run on PRs to production/test OR manual trigger
     name: docker / build-and-push
-    if: contains(fromJson('["production", "test"]'), github.base_ref) || github.event_name == 'workflow_dispatch'
+    if: contains(fromJson('["production", "test"]'), github.ref_name)
     runs-on: ubuntu-latest
 
     steps:
@@ -42,19 +36,7 @@ jobs:
       - name: Set Docker tag based on target branch
         id: set-tag
         run: |
-          echo "github.event_name=${{ github.event_name }}"
-          echo "github.base_ref=${{ github.base_ref }}"
-          echo "inputs.branch=${{ inputs.branch }}"
-
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            TARGET_BRANCH="${{ inputs.branch }}"
-          else
-            TARGET_BRANCH="${{ github.base_ref }}"
-          fi
-
-          echo "TARGET_BRANCH=$TARGET_BRANCH"
-
-          if [[ "$TARGET_BRANCH" == "production" ]]; then
+          if [[ "${{ github.ref_name }}" == "production" ]]; then
             echo "TAG=latest" >> $GITHUB_OUTPUT
           else
             echo "TAG=test" >> $GITHUB_OUTPUT
