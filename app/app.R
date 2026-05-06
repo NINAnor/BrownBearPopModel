@@ -165,9 +165,9 @@ server <- function(input, output, session) {
   output$high <- renderUI({
     numericInput("HighRange", "Övre:", input$lowRange + 1, min = input$lowRange + 1, max = 1000)
   })
-
+  
   # renderUI to allow multiple quotas
-
+  
   output$female_harvest_inputs <- renderUI({
     req(input$forecast)
 
@@ -177,15 +177,15 @@ server <- function(input, output, session) {
       # If user wants to input per year
       lapply(1:num_years, function(i) {
         numericInput(paste0("female_harvest_", i),
-          paste("År", i, "Honbjörnar"),
-          value = 25, min = 0, max = 1000
+                     paste("År", i, "Honbjörnar"),
+                     value = 25, min = 0, max = 1000
         )
       })
     } else {
       # Single input for all years
       numericInput("female_harvest_all",
-        "Jaktuttag (gäller alla år)",
-        value = 25, min = 0, max = 1000
+                   "Jaktuttag (gäller alla år)",
+                   value = 25, min = 0, max = 1000
       )
     }
   })
@@ -197,7 +197,7 @@ server <- function(input, output, session) {
       escape_double = FALSE,
       trim_ws = TRUE
     )
-
+    
     output$data_summary <- renderPrint({
       if (!is.null(data_internal$raw)) {
         cat(paste0(
@@ -212,19 +212,19 @@ server <- function(input, output, session) {
         ))
       }
     })
-
+    
     output$view <- renderTable({
       if (!is.null(data_internal$raw)) {
         data_internal$raw
       }
     })
-
+    
     output$census <- renderUI({
       numericInput("census_yr", "census year", min(data_internal$raw[1]), min = 2000, max = lubridate::year(Sys.Date()))
     })
   })
-
-
+  
+  
   observeEvent(input$run_model, {
     if (input$zeroRem == "Yes") {
       data_internal$reshape <<- data_internal$raw %>%
@@ -238,8 +238,8 @@ server <- function(input, output, session) {
             replace_na(
               Alder,
               sample(c(0:19), 1,
-                replace = TRUE,
-                prob = harvest_age$Andel
+                     replace = TRUE,
+                     prob = harvest_age$Andel
               )
             )
         ) |>
@@ -316,9 +316,9 @@ server <- function(input, output, session) {
             "och", harvest_values[length(harvest_values)]
           )
         }
-
-
-
+        
+        
+        
         plot <- N_bear_tibble3() %>%
           ggplot(aes(as.integer(year), bears, group = year, fill = label)) +
           geom_violin(col = "grey", alpha = 0.6) +
@@ -334,8 +334,8 @@ server <- function(input, output, session) {
             "Rekonstruktion av hondjurspopulationen från ", input$census_yr,
             " Inventering och prognos från ", input$this_yr, " med årligt jaktuttag på ", harvest_text, " honor"
           ))
-
-
+        
+        
         plotly::ggplotly(plot, tooltip = "text") %>%
           style(hoverinfo = "none")
       })
@@ -385,27 +385,27 @@ server <- function(input, output, session) {
                  
                  "Undre konfidensintervall"= round(hdi[,1],2),
                  
-                 "Ãvre konfidensintervall"= round(hdi[,2],2) ) %>%
+                 "Övre konfidensintervall"= round(hdi[,2],2) ) %>%
           select("År","Medelvärde antal honor", "Undre konfidensintervall",
-                 "Ãvre konfidensintervall")
+                 "Övre konfidensintervall")
         
         datatable(tab,
-          caption = paste0(
-            "Rekonstruktion av hondjurspopulationen från ", input$census_yr,
-            " Inventering och prognos från ", input$this_yr, " med årligt jaktuttag på ", harvest_text, " honor"
-          ),
-          extensions = "Buttons",
-          options = list(
-            paging = TRUE,
-            pageLength = 20,
-            searching = TRUE,
-            fixedColumns = TRUE,
-            autoWidth = TRUE,
-            ordering = TRUE,
-            dom = "tB",
-            buttons = c("pdf", "copy", "csv", "excel")
-          ),
-          class = "display"
+                  caption = paste0(
+                    "Rekonstruktion av hondjurspopulationen från ", input$census_yr,
+                    " Inventering och prognos från ", input$this_yr, " med årligt jaktuttag på ", harvest_text, " honor"
+                  ),
+                  extensions = "Buttons",
+                  options = list(
+                    paging = TRUE,
+                    pageLength = 20,
+                    searching = TRUE,
+                    fixedColumns = TRUE,
+                    autoWidth = TRUE,
+                    ordering = TRUE,
+                    dom = "tB",
+                    buttons = c("pdf", "copy", "csv", "excel")
+                  ),
+                  class = "display"
         )
       })
     } else {
@@ -488,7 +488,7 @@ server <- function(input, output, session) {
             "Rekonstruktion av hondjurspopulationen från ", input$census_yr1,
             " Inventering och prognos från ", input$this_yr, " med årligt jaktuttag på ", harvest_text, " honor"
           ))
-
+        
         plotly::ggplotly(plot, tooltip = "text") %>%
           style(hoverinfo = "none")
       })
@@ -537,27 +537,27 @@ server <- function(input, output, session) {
           mutate("År" = year,
                  "Medelvärde antal honor" = mean.bears,
                  "Undre konfidensintervall" = round(lower, 2),
-                 "Ãvre konfidensintervall" = round(upper, 2)) %>%
-          select("År", "Medelvärde antal honor", "Undre konfidensintervall", "Ãvre konfidensintervall")
+                 "Övre konfidensintervall" = round(upper, 2)) %>%
+          select("År", "Medelvärde antal honor", "Undre konfidensintervall", "Övre konfidensintervall")
         datatable(tab,
-          caption = paste0(
-            "Rekonstruktion av hondjurspopulationen från ", input$census_yr1,
-            " Inventering och prognos från ", input$this_yr,
-            " med årligt jaktuttag på ", harvest_text, " honor"
-          ),
-          extensions = "Buttons",
-          options = list(
-            paging = TRUE,
-            pageLength = 20,
-            searching = TRUE,
-            fixedColumns = TRUE,
-            autoWidth = TRUE,
-            ordering = TRUE,
-            dom = "tB",
-            buttons = c("copy", "csv", "excel", "pdf")
-          ),
-          rownames = FALSE,
-          class = "display"
+                  caption = paste0(
+                    "Rekonstruktion av hondjurspopulationen från ", input$census_yr1,
+                    " Inventering och prognos från ", input$this_yr,
+                    " med årligt jaktuttag på ", harvest_text, " honor"
+                  ),
+                  extensions = "Buttons",
+                  options = list(
+                    paging = TRUE,
+                    pageLength = 20,
+                    searching = TRUE,
+                    fixedColumns = TRUE,
+                    autoWidth = TRUE,
+                    ordering = TRUE,
+                    dom = "tB",
+                    buttons = c("copy", "csv", "excel", "pdf")
+                  ),
+                  rownames = FALSE,
+                  class = "display"
         )
       })
     }
