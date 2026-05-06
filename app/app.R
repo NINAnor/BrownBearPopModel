@@ -170,9 +170,9 @@ server <- function(input, output, session) {
   
   output$female_harvest_inputs <- renderUI({
     req(input$forecast)
-    
+
     num_years <- min(5, input$forecast)
-    
+
     if (isTRUE(input$multiple_harvests)) {
       # If user wants to input per year
       lapply(1:num_years, function(i) {
@@ -189,7 +189,7 @@ server <- function(input, output, session) {
       )
     }
   })
-  
+
   observeEvent(input$harvestdata, {
     data_internal$raw <- read_delim(
       file = input$harvestdata$datapath,
@@ -303,9 +303,9 @@ server <- function(input, output, session) {
             harvest_values <- rep(NA_real_, min(5, input$years_to_forecast))
           }
         }
-        
+
         harvest_values <- na.omit(harvest_values)
-        
+
         if (length(harvest_values) == 0) {
           harvest_text <- "inga värden"
         } else if (length(unique(harvest_values)) == 1) {
@@ -360,10 +360,10 @@ server <- function(input, output, session) {
             harvest_values <- rep(NA_real_, min(5, input$years_to_forecast))
           }
         }
-        
+
         # Remove NAs
         harvest_values <- na.omit(harvest_values)
-        
+
         # Check if all values are the same
         if (length(unique(harvest_values)) == 1) {
           # If all values are the same, return just that value
@@ -460,9 +460,9 @@ server <- function(input, output, session) {
             harvest_values <- rep(NA_real_, min(5, input$years_to_forecast))
           }
         }
-        
+
         harvest_values <- na.omit(harvest_values)
-        
+
         if (length(harvest_values) == 0) {
           harvest_text <- "inga värden"
         } else if (length(unique(harvest_values)) == 1) {
@@ -513,9 +513,9 @@ server <- function(input, output, session) {
             harvest_values <- rep(NA_real_, min(5, input$years_to_forecast))
           }
         }
-        
+
         harvest_values <- na.omit(harvest_values)
-        
+
         if (length(harvest_values) == 0) {
           harvest_text <- "inga värden"
         } else if (length(unique(harvest_values)) == 1) {
@@ -561,9 +561,9 @@ server <- function(input, output, session) {
         )
       })
     }
-    
-    
-    
+
+
+
     observeEvent(input$go, {
       screenshot()
     })

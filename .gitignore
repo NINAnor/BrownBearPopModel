@@ -4,3 +4,7 @@
 
 # Ignore stack.env
 stack.env
+
+# Ignore R-specific files
+.RData
+.Rhistory
