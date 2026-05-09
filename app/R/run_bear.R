@@ -73,11 +73,11 @@ run_bear<- function(lowest, highest, years_since, years_to_forecast, female_harv
     age_start <- sample(seq(1:20), size = N_start, prob = Stabil_fordelig$Andel, replace = TRUE)
     
     n_start <- data.frame(antall = table(age_start)) %>%
-      rename(alder = antall.age_start, antall = antall.Freq) %>%
-      mutate(alder = as.numeric(as.character(alder))) %>%
-      right_join(., alder1) %>%
-      mutate(antall = replace_na(antall, 0)) %>%
-      arrange(alder)
+      dplyr::rename(alder = antall.age_start, antall = antall.Freq) %>%
+      dplyr::mutate(alder = as.numeric(as.character(alder))) %>%
+      dplyr::right_join(., alder1) %>%
+      dplyr::mutate(antall = replace_na(antall, 0)) %>%
+      dplyr::arrange(alder)
     
     n_bear[, 1, j] <- as.matrix(n_start$antall)
     n_bear[, 1, j] <- pmax(n_bear[, 1, j] - removals_tot[, 1], 0)
@@ -119,7 +119,7 @@ run_bear<- function(lowest, highest, years_since, years_to_forecast, female_harv
       R[i, 17:20] <- S[i, 17] * P_COY[i, 16] * LS[i, 16]
       A[1, ] <- R[i, ]
       
-      lam[i, j] <- eigen.analysis(A)$lam
+      lam[i, j] <- popbio::eigen.analysis(A)$lam
       
       ### Age transitions (survival)
       for (a in 1:19) {
