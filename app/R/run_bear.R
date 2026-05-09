@@ -13,7 +13,6 @@ run_bear<- function(lowest, highest, years_since, years_to_forecast, female_harv
   
   ### Load libraries
   library(popbio)
-  library(boot)
   library(dplyr)
   library(tibble)
   library(tidyr)
@@ -21,7 +20,6 @@ run_bear<- function(lowest, highest, years_since, years_to_forecast, female_harv
   #### Load data
   mort_fem <- readRDS("data/mort_feml.rds")
   mort_COY <- readRDS("data/mort_COY.rds")
-  COY_survival <- readRDS("data/COY_survival.rds")
   LitterSize <- readRDS("data/LitterSize.rds")
   prob_COY <- readRDS("data/prob_COY.rds")
   Stabil_fordelig <- readRDS("data/Stabil_fordelig.rds")
@@ -89,32 +87,32 @@ run_bear<- function(lowest, highest, years_since, years_to_forecast, female_harv
     
     for (i in 1:nyear) {
       ### Survival sampling
-      S[i, 1] <- A[2, 1] <- 1 - boot::inv.logit(sample(mort_COY$COY_mort, 1))
-      S[i, 2] <- A[3, 2] <- 1 - boot::inv.logit(sample(mort_fem$Y1, 1))
-      S[i, 3] <- A[4, 3] <- 1 - boot::inv.logit(sample(mort_fem$Y2, 1))
-      S[i, 4] <- A[5, 4] <- 1 - boot::inv.logit(sample(mort_fem$Y3, 1))
-      S[i, 5] <- A[6, 5] <- 1 - boot::inv.logit(sample(mort_fem$Y4, 1))
-      S[i, 6] <- A[7, 6] <- 1 - boot::inv.logit(sample(mort_fem$Y5, 1))
-      S[i, 7:11] <- A[8, 7] <- A[9, 8] <- A[10, 9] <- A[11, 10] <- A[12, 11] <- 1 - boot::inv.logit(sample(mort_fem$Y6_10, 1))
-      S[i, 12:16] <- A[13, 12] <- A[14, 13] <- A[15, 14] <- A[16, 15] <- A[17, 16] <- 1 - boot::inv.logit(sample(mort_fem$Y11_15, 1))
-      S[i, 17:20] <- A[18, 17] <- A[19, 18] <- A[20, 19] <- 1 - boot::inv.logit(sample(mort_fem$Y_16, 1))
+      S[i, 1] <- A[2, 1] <- 1 - sample(mort_COY$COY_mort, 1)
+      S[i, 2] <- A[3, 2] <- 1 - sample(mort_fem$Y1, 1)
+      S[i, 3] <- A[4, 3] <- 1 - sample(mort_fem$Y2, 1)
+      S[i, 4] <- A[5, 4] <- 1 - sample(mort_fem$Y3, 1)
+      S[i, 5] <- A[6, 5] <- 1 - sample(mort_fem$Y4, 1)
+      S[i, 6] <- A[7, 6] <- 1 - sample(mort_fem$Y5, 1)
+      S[i, 7:11] <- A[8, 7] <- A[9, 8] <- A[10, 9] <- A[11, 10] <- A[12, 11] <- 1 - sample(mort_fem$Y6_10, 1)
+      S[i, 12:16] <- A[13, 12] <- A[14, 13] <- A[15, 14] <- A[16, 15] <- A[17, 16] <- 1 - sample(mort_fem$Y11_15, 1)
+      S[i, 17:20] <- A[18, 17] <- A[19, 18] <- A[20, 19] <- 1 - sample(mort_fem$Y_16, 1)
       
       if(!terminalAgeClass){
         A[20, 20] <-  A[20, 19]
       }
       
       ### Reproduction sampling
-      P_COY[i, 4] <- boot::inv.logit(sample(prob_COY$Y4, 1))
-      P_COY[i, 5] <- boot::inv.logit(sample(prob_COY$Y5, 1))
-      P_COY[i, 6:10] <- boot::inv.logit(sample(prob_COY$Y6_10, 1))
-      P_COY[i, 11:15] <- boot::inv.logit(sample(prob_COY$Y11_15, 1))
-      P_COY[i, 16:20] <- boot::inv.logit(sample(prob_COY$Y_16, 1))
+      P_COY[i, 4] <- sample(prob_COY$Y4, 1)
+      P_COY[i, 5] <- sample(prob_COY$Y5, 1)
+      P_COY[i, 6:10] <- sample(prob_COY$Y6_10, 1)
+      P_COY[i, 11:15] <- sample(prob_COY$Y11_15, 1)
+      P_COY[i, 16:20] <- sample(prob_COY$Y_16, 1)
       
-      LS[i, 4] <- exp(sample(LitterSize$Y4, 1)) / 2
-      LS[i, 5] <- exp(sample(LitterSize$Y5, 1)) / 2
-      LS[i, 6:10] <- exp(sample(LitterSize$Y6_10, 1)) / 2
-      LS[i, 11:15] <- exp(sample(LitterSize$Y11_15, 1)) / 2
-      LS[i, 16:20] <- exp(sample(LitterSize$Y_16, 1)) / 2
+      LS[i, 4] <- sample(LitterSize$Y4, 1) / 2
+      LS[i, 5] <- sample(LitterSize$Y5, 1) / 2
+      LS[i, 6:10] <- sample(LitterSize$Y6_10, 1) / 2
+      LS[i, 11:15] <- sample(LitterSize$Y11_15, 1) / 2
+      LS[i, 16:20] <- sample(LitterSize$Y_16, 1) / 2
       
       ### Recruitment
       R[i, 4] <- S[i, 4] * P_COY[i, 4] * LS[i, 4]
