@@ -6,8 +6,10 @@
 #' @param female_harvest the number of female bears to remove each year (this value can be different for each year up to 5 years)
 #' @param removals a dataframe of removals between the past census and this year
 #' @param nsim the number of simulations to run (set at 50 for testing)
+#' @param terminalAgeClass logical. Whether reaching the last age class is "terminal" (TRUE) or not (FALSE, default). 
+#' If the age class is terminal, individuals in that age class disappear from the model after one year (= die). Otherwise, they may remain in the last age class if they survive.
 
-run_bear<- function(lowest, highest, years_since, years_to_forecast, female_harvest, removals, nsim = 50) {
+run_bear<- function(lowest, highest, years_since, years_to_forecast, female_harvest, removals, nsim = 50, terminalAgeClass = FALSE) {
   
   ### Load libraries
   library(popbio)
@@ -73,11 +75,11 @@ run_bear<- function(lowest, highest, years_since, years_to_forecast, female_harv
     age_start <- sample(seq(1:20), size = N_start, prob = Stabil_fordelig$Andel, replace = TRUE)
     
     n_start <- data.frame(antall = table(age_start)) %>%
-      rename(alder = antall.age_start, antall = antall.Freq) %>%
-      mutate(alder = as.numeric(as.character(alder))) %>%
-      right_join(., alder1) %>%
-      mutate(antall = replace_na(antall, 0)) %>%
-      arrange(alder)
+      dplyr::rename(alder = antall.age_start, antall = antall.Freq) %>%
+      dplyr::mutate(alder = as.numeric(as.character(alder))) %>%
+      dplyr::right_join(., alder1) %>%
+      dplyr::mutate(antall = replace_na(antall, 0)) %>%
+      dplyr::arrange(alder)
     
     n_bear[, 1, j] <- as.matrix(n_start$antall)
     n_bear[, 1, j] <- pmax(n_bear[, 1, j] - removals_tot[, 1], 0)
@@ -96,6 +98,10 @@ run_bear<- function(lowest, highest, years_since, years_to_forecast, female_harv
       S[i, 7:11] <- A[8, 7] <- A[9, 8] <- A[10, 9] <- A[11, 10] <- A[12, 11] <- 1 - boot::inv.logit(sample(mort_fem$Y6_10, 1))
       S[i, 12:16] <- A[13, 12] <- A[14, 13] <- A[15, 14] <- A[16, 15] <- A[17, 16] <- 1 - boot::inv.logit(sample(mort_fem$Y11_15, 1))
       S[i, 17:20] <- A[18, 17] <- A[19, 18] <- A[20, 19] <- 1 - boot::inv.logit(sample(mort_fem$Y_16, 1))
+      
+      if(!terminalAgeClass){
+        A[20, 20] <-  A[20, 19]
+      }
       
       ### Reproduction sampling
       P_COY[i, 4] <- boot::inv.logit(sample(prob_COY$Y4, 1))
@@ -119,11 +125,16 @@ run_bear<- function(lowest, highest, years_since, years_to_forecast, female_harv
       R[i, 17:20] <- S[i, 17] * P_COY[i, 16] * LS[i, 16]
       A[1, ] <- R[i, ]
       
-      lam[i, j] <- eigen.analysis(A)$lam
+      lam[i, j] <- popbio::eigen.analysis(A)$lam
       
       ### Age transitions (survival)
       for (a in 1:19) {
         n_bear[a + 1, i + 1, j] <- rbinom(1, n_bear[a, i, j], S[i, a])
+      }
+      
+      if(!terminalAgeClass){
+        surv_lastAge <- rbinom(1, n_bear[20, i, j], S[i, 20])
+        n_bear[20, i + 1, j] <-   n_bear[20, i + 1, j] + surv_lastAge
       }
       
       ### Recruitment - newborn cubs
