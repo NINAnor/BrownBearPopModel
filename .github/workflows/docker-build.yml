@@ -5,24 +5,18 @@ permissions:
   packages: write
 
 on:
-  pull_request:
+  push:
     branches: [ production, test ]
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to build'
-        required: true
-        default: 'test'
-        type: choice
-        options:
-          - test
-          - production
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_name == 'test' }}
 
 jobs:
   docker-build-push:
     # Run on PRs to production/test OR manual trigger
     name: docker / build-and-push
-    if: contains(fromJson('["production", "test"]'), github.base_ref) || github.event_name == 'workflow_dispatch'
+    if: contains(fromJson('["production", "test"]'), github.ref_name)
     runs-on: ubuntu-latest
 
     steps:
@@ -39,7 +33,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set Docker tag based on target branch
         id: set-tag

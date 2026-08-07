@@ -1,7 +1,13 @@
 # Use the official R 4.4 image from the Rocker project
 FROM rocker/shiny:4.4.0
 
-    # Install system dependencies, clean up, and set permissions
+# Metadata labels
+LABEL maintainer="BrownBearPopModel"
+LABEL description="Shiny application for BrownBearPopModel"
+LABEL version="1.0"
+LABEL org.opencontainers.image.source="https://github.com/NINANor/BrownBearPopModel"
+
+# Install system dependencies, clean up, and set permissions
 RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     libssl-dev \
@@ -33,6 +39,7 @@ RUN R -e "install.packages(c( \
     'htmltools', \
     'plotly', \
     'popbio', \
+    'boot', \
     'shinyvalidate', \
     'readr', \
     'shinyBS', \
@@ -41,7 +48,7 @@ RUN R -e "install.packages(c( \
     'ggdist', \
     'markdown', \
     'lubridate' \
-))" \
+    ))" \
     && rm -rf /tmp/*
 
 # Remove unnecessary files in the Shiny server directory
